@@ -1,0 +1,93 @@
+name: Scheduled contributions
+
+on:
+  schedule:
+    - cron: "57 5 30 7 *"    # Jul30 2026-07-30 08:57 x5
+    - cron: "15 14 30 7 *"   # Jul30 2026-07-30 17:15 x8
+    - cron: "37 4 30 7 *"    # Jul30 2026-07-30 07:37 x6
+    - cron: "9 9 30 7 *"     # Jul30 2026-07-30 12:09 x9
+    - cron: "48 8 30 7 *"    # Jul30 2026-07-30 11:48 x3
+    - cron: "23 8 30 7 *"    # Jul30 2026-07-30 11:23 x6
+    - cron: "49 5 30 7 *"    # Jul30 2026-07-30 08:49 x2
+    - cron: "17 7 31 7 *"    # Jul31 2026-07-31 10:17 x6
+    - cron: "50 16 31 7 *"   # Jul31 2026-07-31 19:50 x5
+    - cron: "52 15 31 7 *"   # Jul31 2026-07-31 18:52 x2
+    - cron: "23 10 31 7 *"   # Jul31 2026-07-31 13:23 x10
+    - cron: "11 14 31 7 *"   # Jul31 2026-07-31 17:11 x6
+    - cron: "46 18 31 7 *"   # Jul31 2026-07-31 21:46 x8
+    - cron: "34 16 1 8 *"    # Aug1 2026-08-01 19:34 x7
+    - cron: "24 3 1 8 *"     # Aug1 2026-08-01 06:24 x1
+    - cron: "14 19 1 8 *"    # Aug1 2026-08-01 22:14 x10
+    - cron: "40 15 1 8 *"    # Aug1 2026-08-01 18:40 x9
+    - cron: "48 11 1 8 *"    # Aug1 2026-08-01 14:48 x5
+    - cron: "10 14 1 8 *"    # Aug1 2026-08-01 17:10 x2
+    - cron: "55 10 1 8 *"    # Aug1 2026-08-01 13:55 x6
+    - cron: "17 14 2 8 *"    # Aug2 Sun#1 2026-08-02 17:17
+    - cron: "28 15 2 8 *"    # Aug2 Sun#2 2026-08-02 18:28
+    - cron: "6 5 3 8 *"      # Aug3 2026-08-03 08:06 x8
+    - cron: "43 11 3 8 *"    # Aug3 2026-08-03 14:43 x5
+    - cron: "22 19 3 8 *"    # Aug3 2026-08-03 22:22 x2
+    - cron: "14 13 3 8 *"    # Aug3 2026-08-03 16:14 x2
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  contribute:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decide commit count
+        id: plan
+        run: |
+          case "${{ github.event.schedule }}" in
+            "57 5 30 7 *") COUNT=5 ;;
+            "15 14 30 7 *") COUNT=8 ;;
+            "37 4 30 7 *") COUNT=6 ;;
+            "9 9 30 7 *") COUNT=9 ;;
+            "48 8 30 7 *") COUNT=3 ;;
+            "23 8 30 7 *") COUNT=6 ;;
+            "49 5 30 7 *") COUNT=2 ;;
+            "17 7 31 7 *") COUNT=6 ;;
+            "50 16 31 7 *") COUNT=5 ;;
+            "52 15 31 7 *") COUNT=2 ;;
+            "23 10 31 7 *") COUNT=10 ;;
+            "11 14 31 7 *") COUNT=6 ;;
+            "46 18 31 7 *") COUNT=8 ;;
+            "34 16 1 8 *") COUNT=7 ;;
+            "24 3 1 8 *") COUNT=1 ;;
+            "14 19 1 8 *") COUNT=10 ;;
+            "40 15 1 8 *") COUNT=9 ;;
+            "48 11 1 8 *") COUNT=5 ;;
+            "10 14 1 8 *") COUNT=2 ;;
+            "55 10 1 8 *") COUNT=6 ;;
+            "17 14 2 8 *") COUNT=1 ;;
+            "28 15 2 8 *") COUNT=1 ;;
+            "6 5 3 8 *") COUNT=8 ;;
+            "43 11 3 8 *") COUNT=5 ;;
+            "22 19 3 8 *") COUNT=2 ;;
+            "14 13 3 8 *") COUNT=2 ;;
+            *) COUNT=1 ;;
+          esac
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+      - name: Create scheduled commits
+        env:
+          COUNT: ${{ steps.plan.outputs.count }}
+        run: |
+          git config user.name "DzenisNico"
+          git config user.email "Denis.Nikos@finoragroups.com"
+          for i in $(seq 1 "$COUNT"); do
+            TS="$(date -u +"%Y-%m-%d %H:%M UTC")"
+            FILE="scheduled/log-${TS//[: ]/-}-$i.txt"
+            mkdir -p scheduled
+            {
+              echo "Scheduled contribution"
+              echo "Timestamp: $TS"
+              echo "Item $i of $COUNT"
+              echo "Trigger: ${{ github.event.schedule }}"
+            } > "$FILE"
+            git add "$FILE"
+            git commit -m "Scheduled update $i/$COUNT ($TS)"
+          done
+          git push
