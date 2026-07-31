@@ -1,0 +1,4 @@
+Scheduled contribution
+Timestamp: 2026-07-31 16:27 UTC
+Item 10 of 10
+Trigger: 23 10 31 7 *
